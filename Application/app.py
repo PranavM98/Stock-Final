@@ -40,9 +40,14 @@ for item in data:
 df['Date_Time']= pd.to_datetime(df['Date_Time'])
 df = df.sort_values(by="Date_Time")
 
+
+
+df_display=df.sort_values(by="Date_Time",ascending=False)
+df_display=df_display.head(15)
+
 print(df.head(5))
 fig = px.line(df, x="Date_Time", y="Stock Price", labels = {'x':'Date-Time', 'y':'Amazon Stock Price'},
-                title="Amazon Stock Price")
+                title="Amazon Stock Price", color_discrete_sequence =['red'])
 fig1= px.line(df, x="Date_Time", y="Nasdaq")
 fig2= px.line(df, x="Date_Time", y="S&P 50")
 
@@ -58,6 +63,7 @@ fig.update_layout(title_x=0.5,
 
                 
 fig1.update_layout(title_x=0.5,
+            
                 paper_bgcolor=background_color,
                 font_color="white",
                 title_font_color="white")
@@ -124,10 +130,18 @@ app.layout = html.Div([
     html.Div([
         dcc.Graph(id='my_bee_map4', figure=fig3),
         
-        ], style={'width': '50%','align': 'right','display': 'inline-block'})
+        ], style={'width': '50%','align': 'right','display': 'inline-block'}),
     
-   
-    
+    html.Div([
+    dash_table.DataTable(
+    id='table',
+    columns=[{"name": i, "id": i} for i in df_display.columns],
+    data=df_display.to_dict('records'),
+    style_cell={
+        'backgroundColor': background_color,
+        'color': 'white'
+    },
+    )]),
     
 
     ], style={
