@@ -6,6 +6,9 @@ import dash  # (version 1.12.0) pip install dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
+import prediction
+import os
+import sys
 from dash.dependencies import Input, Output
 
 app = dash.Dash(__name__)
@@ -21,65 +24,84 @@ import pandas as pd
 bucket='stocks-dump'
 data_key = 'stocks-dump.json'
 data_location = 's3://{}/{}'.format(bucket, data_key)
-
+background_color="#003366"
 #pd.read_csv(data_location)
 
 import json
 
-s3 = boto3.resource('s3')
-obj = s3.Object(bucket, data_key)
-data = json.load(obj.get()['Body']) 
+def get_data():
+    bucket='stocks-dump'
+    data_key = 'stocks-dump.json'
+    data_location = 's3://{}/{}'.format(bucket, data_key)
+    s3 = boto3.resource('s3')
+    obj = s3.Object(bucket, data_key)
+    data = json.load(obj.get()['Body']) 
+    
+    json_data = [] # your list with json objects (dicts)
+    df=pd.DataFrame(columns=['Company','Date_Time','Stock Price','Nasdaq','S&P 50','DowJones'])
+    for item in data:
+        df.loc[len(df)]=[item['Company'],item['Date_Time'],item['Stock Price'],item['Nasdaq'], item['S&P 50'], item['DowJones']]
+    
+    
+    
+    df['Date_Time']= pd.to_datetime(df['Date_Time'])
+    df = df.rename(columns={'Stock Price': 'Stock_Price'})
+    df = df.sort_values(by="Date_Time")
+    
+    
+    
+    
+    df_display=df.sort_values(by="Date_Time",ascending=False)
+    df_display=df_display.head(15)
+    return df.tail(100),df_display
 
-json_data = [] # your list with json objects (dicts)
-df=pd.DataFrame(columns=['Company','Date_Time','Stock Price','Nasdaq','S&P 50','DowJones'])
-for item in data:
-    df.loc[len(df)]=[item['Company'],item['Date_Time'],item['Stock Price'],item['Nasdaq'], item['S&P 50'], item['DowJones']]
+df,df_display=get_data()
+
+print(df.head(10))
 
 
-
-df['Date_Time']= pd.to_datetime(df['Date_Time'])
-df = df.sort_values(by="Date_Time")
-
-
-
-df_display=df.sort_values(by="Date_Time",ascending=False)
-df_display=df_display.head(15)
-
-print(df.head(5))
-fig = px.line(df, x="Date_Time", y="Stock Price", labels = {'x':'Date-Time', 'y':'Amazon Stock Price'},
-                title="Amazon Stock Price", color_discrete_sequence =['red'])
-fig1= px.line(df, x="Date_Time", y="Nasdaq")
-fig2= px.line(df, x="Date_Time", y="S&P 50")
-
-fig3= px.line(df, x="Date_Time", y="DowJones")
-background_color="#003366"
-
-fig.update_layout(title_x=0.5,
-                paper_bgcolor=background_color,
-                font_color="white",
-                title_font_color="white")
+def draw_graphs(df):
+    fig = px.line(df, x="Date_Time", y="Stock_Price", labels = {'x':'Date-Time', 'y':'Amazon Stock Price'},
+                    title="Amazon Stock Price", color_discrete_sequence =['red'])
+    fig1= px.line(df, x="Date_Time", y="Nasdaq", labels = {'x':'Date-Time', 'y':'Nasdaq'},
+                    title="NASDAQ",)
+    fig2= px.line(df, x="Date_Time", y="S&P 50",labels = {'x':'Date-Time', 'y':'S&P 50'},
+                    title="S&P 50",)
+    
+    fig3= px.line(df, x="Date_Time", y="DowJones")
+    
+    
+    fig.update_layout(title_x=0.5,
+                    paper_bgcolor=background_color,
+                    font_color="white",
+                    title_font_color="white")
+                    
+                    
+    
+                    
+    fig1.update_layout(title_x=0.5,
                 
-                
+                    paper_bgcolor=background_color,
+                    font_color="white",
+                    title_font_color="white")
+                    
+    
+                    
+    fig2.update_layout(title_x=0.5,
+                    paper_bgcolor=background_color,
+                    font_color="white",
+                    title_font_color="white")
+    
+    fig3.update_layout(title_x=0.5,
+                    paper_bgcolor=background_color,
+                    font_color="white",
+                    title_font_color="white")
+    
+    return fig,fig1,fig2,fig3
 
-                
-fig1.update_layout(title_x=0.5,
-            
-                paper_bgcolor=background_color,
-                font_color="white",
-                title_font_color="white")
-                
-
-                
-fig2.update_layout(title_x=0.5,
-                paper_bgcolor=background_color,
-                font_color="white",
-                title_font_color="white")
-
-fig3.update_layout(title_x=0.5,
-                paper_bgcolor=background_color,
-                font_color="white",
-                title_font_color="white")
-                
+fig,fig1,fig2,fig3=draw_graphs(df)
+ab=str(df_display.iloc[0,2])
+ab='$'+ab
 # ------------------------------------------------------------------------------
 # App layout
 
@@ -88,12 +110,32 @@ button_style={ 'border': 'none','color':'black','padding':'15px 32px',
             'text-align': 'center','text-decoration':'none',
             'font-size': '24px','align':'center'}
 
-
-app.layout = html.Div([
+def app_layout(df,df_display):
+    app.layout = html.Div([
 
     html.H1("Stock Price Predictions", style={'text-align': 'center','color':'white'}),
 
-    dcc.Graph(id='my_bee_map', figure=fig),
+     html.Div([
+    dcc.Graph(id='my_bee_map', figure=fig),], style={'height':'50%'}),
+    
+        html.Div([
+    html.P('{}'.format(ab),
+						
+							)],style={'align':'center',
+							'color':'white',
+									'fontSize': 40,
+									  'margin': 'auto',
+
+                                        'width':'9%',
+                                        'height':'10%',
+
+                                        'border': '3px solid #FFFF00',
+
+                                        'padding': '6px'
+
+								}),
+    
+    
     
     html.Div([
     
@@ -124,13 +166,8 @@ app.layout = html.Div([
         html.Div([
         dcc.Graph(id='my_bee_map3', figure=fig3),
         
-        ], style={'width': '50%','display': 'inline-block'}),
+        ], style={'width': '50%','align':'center','display': 'inline-block'}),
     
- 
-    html.Div([
-        dcc.Graph(id='my_bee_map4', figure=fig3),
-        
-        ], style={'width': '50%','align': 'right','display': 'inline-block'}),
     
     html.Div([
     dash_table.DataTable(
@@ -138,7 +175,7 @@ app.layout = html.Div([
     columns=[{"name": i, "id": i} for i in df_display.columns],
     data=df_display.to_dict('records'),
     style_cell={
-        'backgroundColor': background_color,
+        'backgroundColor': 'black',
         'color': 'white'
     },
     )]),
@@ -154,7 +191,7 @@ app.layout = html.Div([
   
 })
 
-
+app_layout(df,df_display)
 
 # ------------------------------------------------------------------------------
 
@@ -171,13 +208,11 @@ def displayClick(btn1,btn2):
         print("YES")
         msg = 'Button 2 was most recently clicked'
         print(msg)
+        
+        
     elif 'btn-nclicks-1.n_clicks' == changed_id:
         print("YES")
-        
-        time.sleep(10)
-        msg=str(43)
-        #msg = 'Button 2 was most recently clicked'
-        print(msg)
+        os.execl(sys.executable, sys.executable, *sys.argv)
     else:
         msg="Nothing Pressed"
     
