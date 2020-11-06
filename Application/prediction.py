@@ -1,3 +1,40 @@
+from pmdarima import auto_arima 
+from statsmodels.tsa.statespace.sarimax import SARIMAX 
+# Ignore harmless warnings 
+import warnings 
+warnings.filterwarnings("ignore") 
+import pandas as pd
+import numpy as np
+
+def arima(df):
+  #df['Date_Time'] = pd.to_datetime(df['Date_Time'])
+  print("INSIDE")
+  #y = df.set_index('Date_Time')
+  print("Y()")
+  stepwise_fit = auto_arima(df['Stock_Price'], start_p = 1, start_q = 1, 
+                          max_p = 3, max_q = 3, m = 12, 
+                          start_P = 0, seasonal = True, 
+                          d = None, D = 1, trace = True, 
+                          error_action ='ignore',   # we don't want to know if an order does not work 
+                          suppress_warnings = True,  # we don't want convergence warnings 
+                          stepwise = True)       
+  print(stepwise_fit.summary())
+
+
+  
+      
+  model = SARIMAX(df['Stock_Price'],  
+                  order = (1, 1, 1),  
+                  seasonal_order =(1, 1, 1, 12)) 
+    
+  result = model.fit() 
+  print(result.summary())
+  print("FINISHED MODEL")
+  #model_fit = model.fit()
+  #predictions = model_fit.predict(start=len(y)+1, end=len(y)+1, dynamic=False)
+  #yhat = predictions[0]
+  #print(yhat)
+
 '''
 import numpy as np
 import matplotlib.pyplot as plt

@@ -206,6 +206,7 @@ def displayClick(btn1,btn2):
 
     if 'btn-nclicks-2.n_clicks' == changed_id:
         print("YES")
+        prediction.arima(df)
         msg = 'Button 2 was most recently clicked'
         print(msg)
         

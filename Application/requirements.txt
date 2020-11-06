@@ -1,4 +1,0 @@
-dash
-numpy
-pandas
-plotly
