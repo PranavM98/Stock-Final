@@ -1,5 +1,5 @@
 from pmdarima import auto_arima 
-from statsmodels.tsa.statespace.sarimax import SARIMAX 
+import statsmodels.api as sm
 # Ignore harmless warnings 
 import warnings 
 warnings.filterwarnings("ignore") 
@@ -7,10 +7,9 @@ import pandas as pd
 import numpy as np
 
 def arima(df):
-  #df['Date_Time'] = pd.to_datetime(df['Date_Time'])
-  print("INSIDE")
-  #y = df.set_index('Date_Time')
+
   print("Y()")
+  '''
   stepwise_fit = auto_arima(df['Stock_Price'], start_p = 1, start_q = 1, 
                           max_p = 3, max_q = 3, m = 12, 
                           start_P = 0, seasonal = True, 
@@ -19,15 +18,16 @@ def arima(df):
                           suppress_warnings = True,  # we don't want convergence warnings 
                           stepwise = True)       
   print(stepwise_fit.summary())
-
-
+  '''
   
-      
-  model = SARIMAX(df['Stock_Price'],  
-                  order = (1, 1, 1),  
-                  seasonal_order =(1, 1, 1, 12)) 
+  mod = sm.tsa.statespace.SARIMAX(df['Stock_Price'],
+                                order=(1, 1, 1),
+                                seasonal_order=(1, 1, 1, 12),
+                                enforce_stationarity=False,
+                                enforce_invertibility=False)    
+
     
-  result = model.fit() 
+  result = mod.fit() 
   print(result.summary())
   print("FINISHED MODEL")
   #model_fit = model.fit()
