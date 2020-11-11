@@ -6,8 +6,24 @@ warnings.filterwarnings("ignore")
 import pandas as pd
 import numpy as np
 
+
+
+
+def process_df(df):
+  n=len(df)
+  num_array = np.arange(n)
+  df.reindex(num_array)
+  df=df['Stock_Price']
+
+  df = df.astype(float) 
+  print(np.dtype(df))
+  
+
+  return df
+  
 def arima(df):
 
+  df=process_df(df)
   print("Y()")
   '''
   stepwise_fit = auto_arima(df['Stock_Price'], start_p = 1, start_q = 1, 
@@ -19,8 +35,9 @@ def arima(df):
                           stepwise = True)       
   print(stepwise_fit.summary())
   '''
+  print(df)
   
-  mod = sm.tsa.statespace.SARIMAX(df['Stock_Price'],
+  mod = sm.tsa.statespace.SARIMAX(df,
                                 order=(1, 1, 1),
                                 seasonal_order=(1, 1, 1, 12),
                                 enforce_stationarity=False,
@@ -28,12 +45,20 @@ def arima(df):
 
     
   result = mod.fit() 
+  
+  preds= result.predict(start=0,end=101,dynamic=False)
+  print("PREDS")
+  print(preds)
+  #pred = results.get_prediction(start=100,end=399,dynamic=False)
+  #pred_ci = preds.conf_int()
+  #pred_ci.iloc[:, 1]
   print(result.summary())
   print("FINISHED MODEL")
   #model_fit = model.fit()
   #predictions = model_fit.predict(start=len(y)+1, end=len(y)+1, dynamic=False)
   #yhat = predictions[0]
   #print(yhat)
+  return preds
 
 '''
 import numpy as np

@@ -63,6 +63,8 @@ print(df.head(10))
 def draw_graphs(df):
     fig = px.line(df, x="Date_Time", y="Stock_Price", labels = {'x':'Date-Time', 'y':'Amazon Stock Price'},
                     title="Amazon Stock Price", color_discrete_sequence =['red'])
+                    
+  
     fig1= px.line(df, x="Date_Time", y="Nasdaq", labels = {'x':'Date-Time', 'y':'Nasdaq'},
                     title="NASDAQ",)
     fig2= px.line(df, x="Date_Time", y="S&P 50",labels = {'x':'Date-Time', 'y':'S&P 50'},
@@ -102,8 +104,9 @@ def draw_graphs(df):
 fig,fig1,fig2,fig3=draw_graphs(df)
 ab=str(df_display.iloc[0,2])
 ab='$'+ab
+pred=0
 # ------------------------------------------------------------------------------
-# App layout
+# App layot
 
 
 button_style={ 'border': 'none','color':'black','padding':'15px 32px',
@@ -143,8 +146,31 @@ def app_layout(df,df_display):
     style=button_style)
     ],
     style=button_style),
+    
+    
+    #    html.Div(id='container-button-timestamp',[
+    #html.P('{}'.format(pred),
+#						#
+					#		)],style={'align':'center',
+				#			'color':'white',
+			#						'fontSize': 40,
+		#							  'margin': 'auto',
+        #                                'width':'9%',
+        #                                'height':'10%',
+        ##                                'border': '3px solid #FFFF00',
+              #                          'padding': '6px'
 
-    html.Div(id='container-button-timestamp'),
+			#					}),
+
+    html.Div(id='container-button-timestamp', style={'align':'center',
+							'color':'white',
+									'fontSize': 40,
+									  'margin': 'auto',
+                                    'width':'9%',
+                                        'height':'10%'
+                                        }
+        
+        ),
     
     
     html.Div([
@@ -202,8 +228,12 @@ def displayClick(btn1,btn2):
 
     if 'btn-nclicks-2.n_clicks' == changed_id:
         print("YES")
-        prediction.arima(df)
-        msg = 'Button 2 was most recently clicked'
+        preds=prediction.arima(df)
+        pred=str(round(float(preds.tail(1).values),2))
+        pred='$'+pred
+        print("P")
+        print(pred)
+        msg = pred
         print(msg)
         
         
@@ -211,7 +241,7 @@ def displayClick(btn1,btn2):
         print("YES")
         os.execl(sys.executable, sys.executable, *sys.argv)
     else:
-        msg="Nothing Pressed"
+        print("")
     
     return html.Div(msg)
 
